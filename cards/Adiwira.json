@@ -41,8 +41,8 @@
   },
   {
     "id": "AD- (5)",
-    "name": "Serangan musuh tidak berkesan jika 2 kali menang.",
-    "effect": NaN,
+    "name": "Jokertu",
+    "effect": "Serangan musuh tidak berkesan jika 2 kali menang.",
     "effect_id": 1,
     "effect_condition": "",
     "effect_value": "2 kali",
