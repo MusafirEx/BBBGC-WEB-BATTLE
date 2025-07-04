@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BoBoiBoy Galaxy Card Game</title>
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-database-compat.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background-color: #000;
+      font-family: sans-serif;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .firebase-auth-ui, .tab-switcher {
+      width: 800px;
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #222;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      border: 1px solid white;
+      border-radius: 5px;
+    }
+
+    .firebase-auth-ui input, .firebase-auth-ui button {
+      padding: 5px 10px;
+      font-size: 14px;
+      border-radius: 4px;
+      border: none;
+    }
+
+    #peer-id-input {
+      display: none;
+    }
+
+    .tab-switcher {
+      justify-content: space-around;
+    }
+
+    .tab-button {
+      flex: 1;
+      padding: 10px;
+      background-color: #333;
+      border: 1px solid white;
+      text-align: center;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .tab-button.active {
+      background-color: #555;
+    }
+
+    .view-container {
+      width: 800px;
+      display: none;
+      border: 1px solid white;
+      margin-top: 10px;
+    }
+
+    .view-container.active {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      display: flex;
+      width: 800px;
+      height: 600px;
+      border: 2px solid white;
+    }
+
+    .left-panel {
+      width: 33.33%;
+      background-color: #111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-size: 18px;
+      border-right: 2px solid white;
+    }
+
+    .game-board {
+      position: relative;
+      width: 66.66%;
+      height: 100%;
+      background-image: url('bbb field.png');
+      background-size: cover;
+    }
+
+    .slot, .hand-area {
+      position: absolute;
+      width: 100px;
+      height: 130px;
+      border: 2px dashed white;
+      border-radius: 8px;
+      background-color: rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .label {
+      font-size: 12px;
+      pointer-events: none;
+    }
+
+    .player-deck    { left: 420px; top: 450px; }
+    .player-menang  { left: 10px;  top: 300px; }
+    .player-kalah   { left: 420px; top: 300px; }
+    .player-aktif   { left: 200px; top: 300px; }
+    .player-hand    { left: 10px;  top: 450px; width: 400px; height: 140px; }
+
+    .enemy-deck     { left: 10px;  top: 10px; }
+    .enemy-menang   { left: 420px; top: 160px; }
+    .enemy-kalah    { left: 10px;  top: 160px; }
+    .enemy-aktif    { left: 200px; top: 160px; }
+    .enemy-hand     { left: 120px; top: 5px; width: 400px; height: 140px; }
+
+    .online-list {
+      width: 100%;
+      max-height: 500px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px;
+    }
+
+    .user-entry {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #333;
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #555;
+    }
+
+    .user-entry button {
+      background-color: #555;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="firebase-auth-ui">
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <button onclick="register()">Register</button>
+    <button onclick="googleLogin()">Google Login</button>
+    <button onclick="logout()">Logout</button>
+    <input type="text" id="peer-id-input">
+    <div id="auth-status">Not logged in</div>
+  </div>
+
+  <div class="tab-switcher">
+    <div class="tab-button active" onclick="switchTab('game')">Game</div>
+    <div class="tab-button" onclick="switchTab('online')">Online Players</div>
+  </div>
+
+  <div id="game" class="view-container active">
+    <div class="container">
+      <div class="left-panel">Player Info / Controls</div>
+      <div class="game-board">
+        <div class="slot player-deck"><div class="label">DEK</div></div>
+        <div class="slot player-menang"><div class="label">MENANG</div></div>
+        <div class="slot player-kalah"><div class="label">KALAH</div></div>
+        <div class="slot player-aktif"><div class="label">AKTIF</div></div>
+        <div class="hand-area player-hand"><div class="label">TANGAN</div></div>
+
+        <div class="slot enemy-deck"><div class="label">DEK</div></div>
+        <div class="slot enemy-menang"><div class="label">MENANG</div></div>
+        <div class="slot enemy-kalah"><div class="label">KALAH</div></div>
+        <div class="slot enemy-aktif"><div class="label">AKTIF</div></div>
+        <div class="hand-area enemy-hand"><div class="label">TANGAN</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="online" class="view-container">
+    <div class="online-list" id="online-list"></div>
+  </div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAfkU0JeMJHxRDLCtUMVvaFGNzYcVi_L7o",
+  authDomain: "bbbgc-e2f01.firebaseapp.com",
+  projectId: "bbbgc-e2f01",
+  storageBucket: "bbbgc-e2f01.firebasestorage.app",
+  messagingSenderId: "446332446643",
+  appId: "1:446332446643:web:caec5871266e73f782cdc6"
+};
+firebase.initializeApp(firebaseConfig);
+
+function googleLogin() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  firebase.auth().signInWithPopup(provider)
+    .catch(err => alert(err.message));
+}
+
+function login() {
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  firebase.auth().signInWithEmailAndPassword(email, password)
+    .catch(err => alert(err.message));
+}
+
+function register() {
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  firebase.auth().createUserWithEmailAndPassword(email, password)
+    .catch(err => alert(err.message));
+}
+
+function logout() {
+  firebase.auth().signOut();
+}
+
+function switchTab(tabId) {
+  const tabs = document.querySelectorAll('.view-container');
+  const buttons = document.querySelectorAll('.tab-button');
+
+  tabs.forEach(tab => tab.classList.remove('active'));
+  buttons.forEach(btn => btn.classList.remove('active'));
+
+  document.getElementById(tabId).classList.add('active');
+  const activeButton = Array.from(buttons).find(btn => btn.textContent.toLowerCase().includes(tabId));
+  if (activeButton) activeButton.classList.add('active');
+}
+
+function loadOnlinePlayers() {
+  const list = document.getElementById('online-list');
+  firebase.database().ref('users').on('value', snapshot => {
+    list.innerHTML = '';
+    snapshot.forEach(child => {
+      const user = child.key;
+      const status = child.val().status;
+      if (user !== username) {
+        const div = document.createElement('div');
+        div.className = 'user-entry';
+        div.innerHTML = `
+          <span>${user} (${status})</span>
+          <button onclick="challengePlayer('${user}')">Challenge</button>
+        `;
+        list.appendChild(div);
+      }
+    });
+  });
+}
+
+function challengePlayer(playerId) {
+  document.getElementById('peer-id-input').value = playerId;
+  connectToPeer();
+}
+</script>
+</body>
+</html>
