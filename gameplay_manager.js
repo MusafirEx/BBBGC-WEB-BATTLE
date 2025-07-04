@@ -1,8 +1,30 @@
+
+let playerDeck = [];
+let aiDeck = [];
+
+// Load player deck
+fetch('player_deck.json')
+  .then(response => response.json())
+  .then(data => {
+    playerDeck = data;
+    console.log('Player Deck loaded:', playerDeck);
+  })
+  .catch(err => console.error('Failed to load player deck:', err));
+
+// Load AI deck
+fetch('AI_deck.json')
+  .then(response => response.json())
+  .then(data => {
+    aiDeck = data;
+    console.log('AI Deck loaded:', aiDeck);
+  })
+  .catch(err => console.error('Failed to load AI deck:', err));
+
 // GameplayManager.js with card detail loading from JSON
 
 let cardData = [];
 
-fetch('cards.json')
+fetch('cards/Adiwira.json')
   .then(response => response.json())
   .then(data => {
     cardData = data;
