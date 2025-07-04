@@ -1,0 +1,37 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BoBoiBoy Galaxy Card Game</title>
+  <style>
+    body { background: #000; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; margin: 0; }
+    .container { display: flex; width: 800px; height: 600px; border: 2px solid #fff; margin-top: 20px; }
+    .left-panel { width: 33.33%; background: #111; display: flex; justify-content: center; align-items: center; }
+    .game-board { position: relative; width: 66.66%; height: 100%; background: url('bbb field.png') center/cover; }
+    .slot, .hand-area { position: absolute; width: 100px; height: 130px; border: 2px dashed #fff; display: flex; align-items: center; justify-content: center; }
+    .label { pointer-events: none; font-size: 12px; }
+  </style>
+</head>
+<body>
+
+<h1>BoBoiBoy Galaxy Card Game</h1>
+
+<div class="container">
+  <div class="left-panel">Player Info / Controls</div>
+  <div class="game-board">
+    <div class="slot" style="left: 420px; top: 450px;"><div class="label">DEK (Player)</div></div>
+    <div class="slot" style="left: 10px; top: 300px;"><div class="label">MENANG (Player)</div></div>
+    <div class="slot" style="left: 420px; top: 300px;"><div class="label">KALAH (Player)</div></div>
+    <div class="slot" style="left: 200px; top: 300px;"><div class="label">AKTIF (Player)</div></div>
+    <div class="hand-area" style="left: 10px; top: 450px; width: 400px; height: 140px;"><div class="label">TANGAN (Player)</div></div>
+    <div class="slot" style="left: 10px; top: 10px;"><div class="label">DEK (Opponent)</div></div>
+    <div class="slot" style="left: 420px; top: 160px;"><div class="label">MENANG (Opponent)</div></div>
+    <div class="slot" style="left: 10px; top: 160px;"><div class="label">KALAH (Opponent)</div></div>
+    <div class="slot" style="left: 200px; top: 160px;"><div class="label">AKTIF (Opponent)</div></div>
+    <div class="hand-area" style="left: 120px; top: 5px; width: 400px; height: 140px;"><div class="label">TANGAN (Opponent)</div></div>
+  </div>
+</div>
+
+</body>
+</html>
