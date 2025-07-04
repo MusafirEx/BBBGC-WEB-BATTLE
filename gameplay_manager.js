@@ -1,16 +1,43 @@
-const player = { dek: [], tangan: [], kalah: [], menang: [], aktif: null, aktifHp: 0, aktifAtk: 0 };
-const opponent = { dek: [], tangan: [], kalah: [], menang: [], aktif: null, aktifHp: 0, aktifAtk: 0 };
-let gamePhase = "waiting";
-let myPeer = null;
-let conn = null;
+// GameplayManager.js with card detail loading from JSON
 
-function log(msg) {
-  const logDiv = document.getElementById('game-log');
-  if (logDiv) logDiv.textContent += msg + "\n";
-}
+let cardData = [];
+
+fetch('cards.json')
+  .then(response => response.json())
+  .then(data => {
+    cardData = data;
+    console.log('Card data loaded:', cardData);
+  })
+  .catch(err => console.error('Failed to load card data:', err));
+
+let player = {
+  dek: [],
+  tangan: [],
+  kalah: [],
+  menang: [],
+  aktif: null,
+  aktifHp: 0,
+  aktifAtk: 0
+};
+
+let opponent = {
+  dek: [],
+  tangan: [],
+  kalah: [],
+  menang: [],
+  aktif: null,
+  aktifHp: 0,
+  aktifAtk: 0
+};
+
+let gamePhase = "waiting";
 
 function startGame() {
-  log("Waiting for opponent to connect and ready.");
+  showReadyPopup();
+}
+
+function showReadyPopup() {
+  alert("Waiting for opponent to connect and ready.");
 }
 
 function bothPlayersReady() {
@@ -20,43 +47,38 @@ function bothPlayersReady() {
 }
 
 function beginPhase() {
-  gamePhase = "begin";
+  announcePhase("Begin Phase");
   while (player.tangan.length < 3 && player.dek.length > 0) player.tangan.push(player.dek.pop());
   while (opponent.tangan.length < 3 && opponent.dek.length > 0) opponent.tangan.push(opponent.dek.pop());
   if (player.tangan.length === 3 && opponent.tangan.length === 3) mainPhase();
 }
 
 function mainPhase() {
-  gamePhase = "main";
+  announcePhase("Main Phase");
   player.aktif = player.tangan.pop();
   opponent.aktif = opponent.tangan.pop();
   flipPhase();
 }
 
 function flipPhase() {
-  gamePhase = "flip";
+  announcePhase("Flip Phase");
   player.aktifHp = 100;
   player.aktifAtk = 20;
   opponent.aktifHp = 100;
   opponent.aktifAtk = 20;
+  console.log("Player active card:", getCardDetail(player.aktif));
+  console.log("Opponent active card:", getCardDetail(opponent.aktif));
   battlePhase();
 }
 
 function battlePhase() {
-  gamePhase = "battle";
-  let playerChoice = null;
-  conn.on('data', data => {
-    if (data.type === "rps-choice") resolveBattle(playerChoice, data.choice);
-  });
-  playerChoice = prompt("Rock, Paper, or Scissors?").toLowerCase();
-  if (!["rock", "paper", "scissors"].includes(playerChoice)) return battlePhase();
-  conn.send({ type: "rps-choice", choice: playerChoice });
-}
+  announcePhase("Battle Phase");
+  let playerChoice = prompt("Rock, Paper, or Scissors?").toLowerCase();
+  let opponentChoice = ["rock", "paper", "scissors"][Math.floor(Math.random() * 3)];
+  alert(`Opponent chose ${opponentChoice}`);
 
-function resolveBattle(playerChoice, opponentChoice) {
-  log(`Opponent chose ${opponentChoice}`);
   if (playerChoice === opponentChoice) {
-    log("It's a draw!");
+    alert("Draw, repeat");
     battlePhase();
   } else if (
     (playerChoice === "rock" && opponentChoice === "scissors") ||
@@ -64,31 +86,37 @@ function resolveBattle(playerChoice, opponentChoice) {
     (playerChoice === "scissors" && opponentChoice === "paper")
   ) {
     opponent.aktifHp -= player.aktifAtk;
-    log("You win this round!");
+    alert("You win the round!");
   } else {
     player.aktifHp -= opponent.aktifAtk;
-    log("You lose this round!");
+    alert("You lose the round!");
   }
+
   if (player.aktifHp <= 0) endPhase("opponent");
   else if (opponent.aktifHp <= 0) endPhase("player");
   else battlePhase();
 }
 
 function endPhase(winner) {
-  gamePhase = "end";
+  announcePhase("End Phase");
   if (winner === "player") {
     player.menang.push(player.aktif);
     opponent.kalah.push(opponent.aktif);
-    log("You win the battle!");
+    alert("You win the battle!");
   } else {
     opponent.menang.push(opponent.aktif);
     player.kalah.push(player.aktif);
-    log("You lose the battle!");
+    alert("You lose the battle!");
   }
   player.aktif = opponent.aktif = null;
-  if (player.menang.length >= 5) log("You win the game!");
-  else if (opponent.menang.length >= 5) log("You lose the game!");
+
+  if (player.menang.length >= 5) alert("You win the game!");
+  else if (opponent.menang.length >= 5) alert("You lose the game!");
   else beginPhase();
+}
+
+function announcePhase(phaseName) {
+  console.log(phaseName);
 }
 
 function generateDeck() {
@@ -101,4 +129,8 @@ function shuffle(arr) {
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   return arr;
+}
+
+function getCardDetail(cardId) {
+  return cardData.find(card => card.id === cardId) || { name: "Unknown Card", type: "Unknown" };
 }
