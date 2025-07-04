@@ -33,7 +33,7 @@
   <button onclick="register()">Register</button>
   <button onclick="googleLogin()">Google Login</button>
   <button onclick="logout()">Logout</button>
-  <button onclick="showProfilePopup()">Profile</button>
+  <button id="profile-btn" onclick="showProfilePopup()" style="display:none">Profile</button>
   <input type="text" id="peer-id-input" style="display:none">
   <div id="auth-status">Not logged in</div>
 </div>
@@ -78,23 +78,69 @@
 const firebaseConfig = { /* Your config here */ };
 firebase.initializeApp(firebaseConfig);
 let username = null;
+let myPeer = null;
+let conn = null;
 
-function login() { /* Your login logic */ }
-function register() { /* Your register logic */ }
-function googleLogin() { /* Your google login logic */ }
-function logout() { /* Your logout logic */ }
+function updateAuthUI(user) {
+  const profileBtn = document.getElementById('profile-btn');
+  const authStatus = document.getElementById('auth-status');
+  if (user) {
+    profileBtn.style.display = 'inline-block';
+    username = user.email.split('@')[0];
+    authStatus.textContent = `Logged in as ${username}`;
+    firebase.database().ref('users/' + username).set({ status: 'waiting' });
+    initializePeerWithUsername(username);
+    loadOnlinePlayers();
+  } else {
+    profileBtn.style.display = 'none';
+    username = null;
+    authStatus.textContent = 'Not logged in';
+  }
+}
+
+firebase.auth().onAuthStateChanged(user => {
+  updateAuthUI(user);
+});
+
+function login() {
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  firebase.auth().signInWithEmailAndPassword(email, password)
+    .catch(err => alert(err.message));
+}
+
+function register() {
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  firebase.auth().createUserWithEmailAndPassword(email, password)
+    .catch(err => alert(err.message));
+}
+
+function googleLogin() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  firebase.auth().signInWithPopup(provider)
+    .catch(err => alert(err.message));
+}
+
+function logout() {
+  firebase.auth().signOut();
+}
+
 function switchTab(tabId) {
   document.querySelectorAll('.view-container').forEach(tab => tab.classList.remove('active'));
   document.querySelector(`#${tabId}`).classList.add('active');
   document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
   document.querySelector(`.tab-button[onclick*="${tabId}"]`).classList.add('active');
 }
+
 function showProfilePopup() {
   document.getElementById('profilePopup').style.display = 'flex';
 }
+
 function closeProfilePopup() {
   document.getElementById('profilePopup').style.display = 'none';
 }
+
 function checkUsername() {
   const newUser = document.getElementById('new-username').value.trim();
   if (!newUser) return;
@@ -102,6 +148,7 @@ function checkUsername() {
     document.getElementById('username-check-result').textContent = snap.exists() ? 'Username taken' : 'Username available';
   });
 }
+
 function updateUsername() {
   const newUser = document.getElementById('new-username').value.trim();
   if (!newUser) return;
@@ -115,6 +162,53 @@ function updateUsername() {
       alert('Username updated to ' + username);
       closeProfilePopup();
     }
+  });
+}
+
+function initializePeerWithUsername(name) {
+  myPeer = new Peer(name);
+  myPeer.on('open', id => console.log('My Peer ID:', id));
+  myPeer.on('connection', connection => {
+    conn = connection;
+    conn.on('data', data => console.log('Received:', data));
+  });
+}
+
+function loadOnlinePlayers() {
+  const list = document.getElementById('online-list');
+  firebase.database().ref('users').on('value', snapshot => {
+    list.innerHTML = '';
+    snapshot.forEach(child => {
+      const user = child.key;
+      const status = child.val().status;
+      if (user !== username) {
+        const div = document.createElement('div');
+        div.className = 'user-entry';
+        div.innerHTML = `<span>${user} (${status})</span> <button onclick="challengePlayer('${user}')">Challenge</button>`;
+        list.appendChild(div);
+      }
+    });
+  });
+}
+
+function challengePlayer(playerId) {
+  document.getElementById('peer-id-input').value = playerId;
+  connectToPeer();
+}
+
+function connectToPeer() {
+  const peerId = document.getElementById('peer-id-input').value;
+  if (!myPeer || !peerId) {
+    alert('Missing PeerJS connection or Peer ID');
+    return;
+  }
+  conn = myPeer.connect(peerId);
+  conn.on('open', () => {
+    console.log('Connected to', peerId);
+    conn.send('Hello from ' + myPeer.id);
+  });
+  conn.on('data', data => {
+    console.log('Received:', data);
   });
 }
 </script>
