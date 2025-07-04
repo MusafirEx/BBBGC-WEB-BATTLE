@@ -1,252 +1,50 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>BoBoiBoy Galaxy Card Game</title>
-  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-database-compat.js"></script>
   <style>
     body { background: #000; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; margin: 0; }
-    .firebase-auth-ui, .tab-switcher { margin-top: 10px; background: #222; padding: 10px; border: 1px solid #fff; display: flex; gap: 10px; flex-wrap: wrap; }
-    .tab-button { padding: 10px; background: #333; border: 1px solid #fff; cursor: pointer; border-radius: 4px; }
-    .tab-button.active { background: #555; }
-    .view-container { width: 800px; display: none; border: 1px solid #fff; margin-top: 10px; }
-    .view-container.active { display: flex; flex-direction: column; align-items: center; }
-    .container { display: flex; width: 800px; height: 600px; border: 2px solid #fff; }
+    .container { display: flex; width: 800px; height: 600px; border: 2px solid #fff; margin-top: 20px; }
     .left-panel { width: 33.33%; background: #111; display: flex; justify-content: center; align-items: center; }
     .game-board { position: relative; width: 66.66%; height: 100%; background: url('bbb field.png') center/cover; }
     .slot, .hand-area { position: absolute; width: 100px; height: 130px; border: 2px dashed #fff; display: flex; align-items: center; justify-content: center; }
     .label { pointer-events: none; font-size: 12px; }
-    .profile-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #222; padding: 20px; border: 1px solid #fff; display: none; flex-direction: column; gap: 10px; }
-    .online-list { width: 100%; max-height: 500px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
-    .user-entry { background: #333; padding: 5px; display: flex; justify-content: space-between; align-items: center; }
   </style>
 </head>
 <body>
 
-<div class="firebase-auth-ui">
-  <input type="email" id="email" placeholder="Email">
-  <input type="password" id="password" placeholder="Password">
-  <button onclick="login()">Login</button>
-  <button onclick="register()">Register</button>
-  <button onclick="googleLogin()">Google Login</button>
-  <button onclick="logout()">Logout</button>
-  <button id="profile-btn" onclick="showProfilePopup()" style="display:none">Profile</button>
-  <input type="text" id="peer-id-input" style="display:none">
-  <div id="auth-status">Not logged in</div>
-</div>
+<h1>BoBoiBoy Galaxy Card Game</h1>
 
-<div class="tab-switcher">
-  <div class="tab-button active" onclick="switchTab('game')">Game</div>
-  <div class="tab-button" onclick="switchTab('online')">Online Players</div>
-</div>
-
-<div id="game" class="view-container active">
-  <div class="container">
-    <div class="left-panel">Player Info / Controls</div>
-    <div class="game-board">
-      <div class="slot" style="left: 420px; top: 450px;"><div class="label">DEK (Player)</div></div>
-      <div class="slot" style="left: 10px; top: 300px;"><div class="label">MENANG (Player)</div></div>
-      <div class="slot" style="left: 420px; top: 300px;"><div class="label">KALAH (Player)</div></div>
-      <div class="slot" style="left: 200px; top: 300px;"><div class="label">AKTIF (Player)</div></div>
-      <div class="hand-area" style="left: 10px; top: 450px; width: 400px; height: 140px;"><div class="label">TANGAN (Player)</div></div>
-      <div class="slot" style="left: 10px; top: 10px;"><div class="label">DEK (Opponent)</div></div>
-      <div class="slot" style="left: 420px; top: 160px;"><div class="label">MENANG (Opponent)</div></div>
-      <div class="slot" style="left: 10px; top: 160px;"><div class="label">KALAH (Opponent)</div></div>
-      <div class="slot" style="left: 200px; top: 160px;"><div class="label">AKTIF (Opponent)</div></div>
-      <div class="hand-area" style="left: 120px; top: 5px; width: 400px; height: 140px;"><div class="label">TANGAN (Opponent)</div></div>
-    </div>
+<div class="container">
+  <div class="left-panel">Player Info / Controls</div>
+  <div class="game-board">
+    <div class="slot" style="left: 420px; top: 450px;"><div class="label">DEK (Player)</div></div>
+    <div class="slot" style="left: 10px; top: 300px;"><div class="label">MENANG (Player)</div></div>
+    <div class="slot" style="left: 420px; top: 300px;"><div class="label">KALAH (Player)</div></div>
+    <div class="slot" style="left: 200px; top: 300px;"><div class="label">AKTIF (Player)</div></div>
+    <div class="hand-area" style="left: 10px; top: 450px; width: 400px; height: 140px;"><div class="label">TANGAN (Player)</div></div>
+    <div class="slot" style="left: 10px; top: 10px;"><div class="label">DEK (Opponent)</div></div>
+    <div class="slot" style="left: 420px; top: 160px;"><div class="label">MENANG (Opponent)</div></div>
+    <div class="slot" style="left: 10px; top: 160px;"><div class="label">KALAH (Opponent)</div></div>
+    <div class="slot" style="left: 200px; top: 160px;"><div class="label">AKTIF (Opponent)</div></div>
+    <div class="hand-area" style="left: 120px; top: 5px; width: 400px; height: 140px;"><div class="label">TANGAN (Opponent)</div></div>
   </div>
 </div>
 
-<div id="online" class="view-container">
-  <div class="online-list" id="online-list"></div>
-</div>
-
-<div class="profile-popup" id="profilePopup">
-  <h3>Edit Username</h3>
-  <input type="text" id="new-username" placeholder="New username" oninput="checkUsername()">
-  
-  <div id="username-check-result" style="margin-top: 5px; font-weight: bold;"></div>
-  <button onclick="updateUsername()">Update</button>
-  <button onclick="closeProfilePopup()">Close</button>
-</div>
-
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyAfkU0JeMJHxRDLCtUMVvaFGNzYcVi_L7o",
-  authDomain: "bbbgc-e2f01.firebaseapp.com",
-  databaseURL: "https://bbbgc-e2f01-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "bbbgc-e2f01",
-  storageBucket: "bbbgc-e2f01.firebasestorage.app",
-  messagingSenderId: "446332446643",
-  appId: "1:446332446643:web:caec5871266e73f782cdc6"
+let cardData = [];
 
-};
-firebase.initializeApp(firebaseConfig);
-let username = null;
-let myPeer = null;
-let conn = null;
-
-function updateAuthUI(user) {
-  const profileBtn = document.getElementById('profile-btn');
-  const authStatus = document.getElementById('auth-status');
-  if (user) {
-    profileBtn.style.display = 'inline-block';
-    document.getElementById('email').style.display = 'none';
-    document.getElementById('password').style.display = 'none';
-    document.querySelector('button[onclick="login()"]').style.display = 'none';
-    document.querySelector('button[onclick="register()"]').style.display = 'none';
-    document.querySelector('button[onclick="googleLogin()"]').style.display = 'none';
-
-    username = user.email.split('@')[0];
-    firebase.database().ref('users/' + username).once('value', snap => {
-      if (!snap.exists()) {
-        firebase.database().ref('users/' + username).set({ status: 'waiting' });
-      }
-      document.getElementById('auth-status').textContent = `Logged in`;
-    });
-    initializePeerWithUsername(username);
-    loadOnlinePlayers();
-  } else {
-    profileBtn.style.display = 'none';
-    username = null;
-    authStatus.textContent = 'Not logged in';
-    document.getElementById('email').style.display = 'inline-block';
-    document.getElementById('password').style.display = 'inline-block';
-    document.querySelector('button[onclick="login()"]').style.display = 'inline-block';
-    document.querySelector('button[onclick="register()"]').style.display = 'inline-block';
-    document.querySelector('button[onclick="googleLogin()"]').style.display = 'inline-block';
-  }
-}
-
-firebase.auth().onAuthStateChanged(user => {
-  updateAuthUI(user);
-});
-
-function login() {
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
-  firebase.auth().signInWithEmailAndPassword(email, password)
-  .then(() => { document.getElementById('password').value = ''; })
-  .catch(err => alert(err.message));
-}
-
-function register() {
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
-  firebase.auth().createUserWithEmailAndPassword(email, password)
-  .then(() => { document.getElementById('password').value = ''; })
-  .catch(err => alert(err.message));
-}
-
-function googleLogin() {
-  const provider = new firebase.auth.GoogleAuthProvider();
-  firebase.auth().signInWithPopup(provider)
-    .catch(err => alert(err.message));
-}
-
-function logout() {
-  firebase.auth().signOut();
-}
-
-function switchTab(tabId) {
-  document.querySelectorAll('.view-container').forEach(tab => tab.classList.remove('active'));
-  document.querySelector(`#${tabId}`).classList.add('active');
-  document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-  document.querySelector(`.tab-button[onclick*="${tabId}"]`).classList.add('active');
-}
-
-function showProfilePopup() {
-  document.getElementById('profilePopup').style.display = 'flex';
-}
-
-function closeProfilePopup() {
-  document.getElementById('profilePopup').style.display = 'none';
-}
-
-function checkUsername() {
-  const newUser = document.getElementById('new-username').value.trim();
-  if (!newUser) return;
-  firebase.database().ref('users/' + newUser).once('value', snap => {
-    const resultDiv = document.getElementById('username-check-result');
-    if (snap.exists()) {
-      resultDiv.textContent = 'Username taken';
-      resultDiv.style.color = 'red';
-    } else {
-      resultDiv.textContent = 'Username available';
-      resultDiv.style.color = 'lightgreen';
-    }
-  });
-}
-
-function updateUsername() {
-  const newUser = document.getElementById('new-username').value.trim();
-  if (!newUser) return;
-  firebase.database().ref('users/' + newUser).once('value', snap => {
-    if (snap.exists()) {
-      alert('Username taken');
-    } else {
-      if (username) firebase.database().ref('users/' + username).remove();
-      username = newUser;
-      firebase.database().ref('users/' + username).set({ status: 'waiting' });
-      alert('Username updated to ' + username);
-    closeProfilePopup();
-    location.reload();
-    }
-  });
-}
-
-function initializePeerWithUsername(name) {
-  myPeer = new Peer(name);
-  myPeer.on('open', id => console.log('My Peer ID:', id));
-  myPeer.on('connection', connection => {
-    conn = connection;
-    conn.on('data', data => console.log('Received:', data));
-  });
-}
-
-function loadOnlinePlayers() {
-  const list = document.getElementById('online-list');
-  firebase.database().ref('users').on('value', snapshot => {
-    list.innerHTML = '';
-    snapshot.forEach(child => {
-      const user = child.key;
-      const status = child.val().status;
-      if (user !== username) {
-        const div = document.createElement('div');
-        div.className = 'user-entry';
-        div.innerHTML = `<span>${user} (${status})</span> <button onclick="challengePlayer('${user}')">Challenge</button>`;
-        list.appendChild(div);
-      }
-    });
-  });
-}
-
-function challengePlayer(playerId) {
-  document.getElementById('peer-id-input').value = playerId;
-  connectToPeer();
-}
-
-function connectToPeer() {
-  const peerId = document.getElementById('peer-id-input').value;
-  if (!myPeer || !peerId) {
-    alert('Missing PeerJS connection or Peer ID');
-    return;
-  }
-  conn = myPeer.connect(peerId);
-  conn.on('open', () => {
-    console.log('Connected to', peerId);
-    conn.send('Hello from ' + myPeer.id);
-  });
-  conn.on('data', data => {
-    console.log('Received:', data);
-  });
-}
+fetch('cards.json')
+  .then(response => response.json())
+  .then(data => {
+    cardData = data;
+    console.log('Cards loaded:', cardData);
+    alert(`First card loaded: ${cardData[0].name}`);
+  })
+  .catch(err => console.error('Error loading cards:', err));
 </script>
 
-  <script src="gameplay_manager.js"></script>
 </body>
 </html>
