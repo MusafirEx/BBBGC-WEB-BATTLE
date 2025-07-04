@@ -67,8 +67,8 @@
 
 <div class="profile-popup" id="profilePopup">
   <h3>Edit Username</h3>
-  <input type="text" id="new-username" placeholder="New username">
-  <button onclick="checkUsername()">Check Availability</button>
+  <input type="text" id="new-username" placeholder="New username" oninput="checkUsername()">
+  
   <div id="username-check-result"></div>
   <button onclick="updateUsername()">Update</button>
   <button onclick="closeProfilePopup()">Close</button>
@@ -95,20 +95,30 @@ function updateAuthUI(user) {
   const authStatus = document.getElementById('auth-status');
   if (user) {
     profileBtn.style.display = 'inline-block';
+    document.getElementById('email').style.display = 'none';
+    document.getElementById('password').style.display = 'none';
+    document.querySelector('button[onclick="login()"]').style.display = 'none';
+    document.querySelector('button[onclick="register()"]').style.display = 'none';
+    document.querySelector('button[onclick="googleLogin()"]').style.display = 'none';
+
     username = user.email.split('@')[0];
-    authStatus.textContent = `Logged in as ${username}`;
     firebase.database().ref('users/' + username).once('value', snap => {
       if (!snap.exists()) {
         firebase.database().ref('users/' + username).set({ status: 'waiting' });
       }
+      document.getElementById('auth-status').textContent = `Logged in as ${username}`;
     });
-    firebase.database().ref('users/' + username).set({ status: 'waiting' });
     initializePeerWithUsername(username);
     loadOnlinePlayers();
   } else {
     profileBtn.style.display = 'none';
     username = null;
     authStatus.textContent = 'Not logged in';
+    document.getElementById('email').style.display = 'inline-block';
+    document.getElementById('password').style.display = 'inline-block';
+    document.querySelector('button[onclick="login()"]').style.display = 'inline-block';
+    document.querySelector('button[onclick="register()"]').style.display = 'inline-block';
+    document.querySelector('button[onclick="googleLogin()"]').style.display = 'inline-block';
   }
 }
 
@@ -176,7 +186,8 @@ function updateUsername() {
       username = newUser;
       firebase.database().ref('users/' + username).set({ status: 'waiting' });
       alert('Username updated to ' + username);
-      closeProfilePopup();
+    closeProfilePopup();
+    location.reload();
     }
   });
 }
