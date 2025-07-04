@@ -97,6 +97,11 @@ function updateAuthUI(user) {
     profileBtn.style.display = 'inline-block';
     username = user.email.split('@')[0];
     authStatus.textContent = `Logged in as ${username}`;
+    firebase.database().ref('users/' + username).once('value', snap => {
+      if (!snap.exists()) {
+        firebase.database().ref('users/' + username).set({ status: 'waiting' });
+      }
+    });
     firebase.database().ref('users/' + username).set({ status: 'waiting' });
     initializePeerWithUsername(username);
     loadOnlinePlayers();
@@ -115,14 +120,16 @@ function login() {
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
   firebase.auth().signInWithEmailAndPassword(email, password)
-    .catch(err => alert(err.message));
+  .then(() => { document.getElementById('password').value = ''; })
+  .catch(err => alert(err.message));
 }
 
 function register() {
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
   firebase.auth().createUserWithEmailAndPassword(email, password)
-    .catch(err => alert(err.message));
+  .then(() => { document.getElementById('password').value = ''; })
+  .catch(err => alert(err.message));
 }
 
 function googleLogin() {
