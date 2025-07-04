@@ -6,10 +6,10 @@
   <title>BoBoiBoy Galaxy Card Game</title>
   <style>
     body { font-family: Arial, sans-serif; background: #23272f; color: #f5f6fa; margin: 0; padding: 20px; }
-    .btn { padding: 6px 16px; border-radius: 8px; border: none; background: #1976d2; color: #fff; cursor: pointer; }
+    .btn { padding: 6px 16px; border-radius: 8px; border: none; background: #1976d2; color: #fff; cursor: pointer; margin-right: 10px; margin-top: 10px; }
     .btn:active { background: #174a83; }
     #game-area { padding: 20px; }
-    .card-list { display: flex; flex-wrap: wrap; gap: 10px; }
+    .card-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
     .card-item { background: #33384a; border-radius: 10px; box-shadow: 0 2px 8px #2228; padding: 12px; width: 200px; }
     .card-item img { width: 100%; border-radius: 10px; }
     .log { font-size: 0.98em; margin-top: 16px; background: #282c34; padding: 10px; border-radius: 7px; }
@@ -25,7 +25,10 @@
   </div>
 
   <div id="game-area" style="display:none;">
-    <h2>All Cards</h2>
+    <h2>Card View</h2>
+    <button id="show-all-btn" class="btn">Show All Cards</button>
+    <button id="show-player-deck-btn" class="btn">Show Player Deck</button>
+    <button id="show-ai-deck-btn" class="btn">Show AI Deck</button>
     <div id="cards" class="card-list"></div>
     <div>
       <button id="test-effect" class="btn">Test Effect on First Card</button>
@@ -37,12 +40,16 @@
 document.getElementById('start-game-btn').onclick = () => {
   document.getElementById('setup-area').style.display = 'none';
   document.getElementById('game-area').style.display = 'block';
+  loadDecks();
 };
 
 import { applyEffect } from './effect.js';
 import './gameplay_manager.js';
 
 let cardData = [];
+let playerDeck = [];
+let aiDeck = [];
+
 let testContext = {
   playerHp: 100,
   playerAtk: 50,
@@ -62,14 +69,14 @@ fetch('cards/Adiwira.json')
   .then(data => {
     cardData = data;
     window.cardData = cardData;
-    renderCards();
+    renderCards(cardData);
   })
   .catch(err => console.error('Error loading cards:', err));
 
-function renderCards() {
+function renderCards(cards) {
   const el = document.getElementById('cards');
   el.innerHTML = '';
-  cardData.forEach(card => {
+  cards.forEach(card => {
     const div = document.createElement('div');
     div.className = 'card-item';
     div.innerHTML = `
@@ -82,6 +89,24 @@ function renderCards() {
   });
 }
 
+function loadDecks() {
+  fetch('player_deck.json')
+    .then(res => res.json())
+    .then(data => {
+      playerDeck = data;
+      console.log('Player Deck:', playerDeck);
+    })
+    .catch(err => console.error('Error loading player deck:', err));
+
+  fetch('AI_deck.json')
+    .then(res => res.json())
+    .then(data => {
+      aiDeck = data;
+      console.log('AI Deck:', aiDeck);
+    })
+    .catch(err => console.error('Error loading AI deck:', err));
+}
+
 document.getElementById('test-effect').onclick = () => {
   if (!cardData.length) return;
   testContext.effectLog = [];
@@ -90,6 +115,20 @@ document.getElementById('test-effect').onclick = () => {
     "Effect log:\n" + (testContext.effectLog.length
       ? testContext.effectLog.join('\n')
       : "No effect triggered.");
+};
+
+document.getElementById('show-all-btn').onclick = () => {
+  renderCards(cardData);
+};
+
+document.getElementById('show-player-deck-btn').onclick = () => {
+  const filtered = cardData.filter(card => playerDeck.includes(card.id));
+  renderCards(filtered);
+};
+
+document.getElementById('show-ai-deck-btn').onclick = () => {
+  const filtered = cardData.filter(card => aiDeck.includes(card.id));
+  renderCards(filtered);
 };
 
 window.applyEffect = applyEffect;
