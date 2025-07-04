@@ -69,7 +69,7 @@
   <h3>Edit Username</h3>
   <input type="text" id="new-username" placeholder="New username" oninput="checkUsername()">
   
-  <div id="username-check-result"></div>
+  <div id="username-check-result" style="margin-top: 5px; font-weight: bold;"></div>
   <button onclick="updateUsername()">Update</button>
   <button onclick="closeProfilePopup()">Close</button>
 </div>
@@ -106,7 +106,7 @@ function updateAuthUI(user) {
       if (!snap.exists()) {
         firebase.database().ref('users/' + username).set({ status: 'waiting' });
       }
-      document.getElementById('auth-status').textContent = `Logged in as ${username}`;
+      document.getElementById('auth-status').textContent = `Logged in`;
     });
     initializePeerWithUsername(username);
     loadOnlinePlayers();
@@ -171,7 +171,14 @@ function checkUsername() {
   const newUser = document.getElementById('new-username').value.trim();
   if (!newUser) return;
   firebase.database().ref('users/' + newUser).once('value', snap => {
-    document.getElementById('username-check-result').textContent = snap.exists() ? 'Username taken' : 'Username available';
+    const resultDiv = document.getElementById('username-check-result');
+    if (snap.exists()) {
+      resultDiv.textContent = 'Username taken';
+      resultDiv.style.color = 'red';
+    } else {
+      resultDiv.textContent = 'Username available';
+      resultDiv.style.color = 'lightgreen';
+    }
   });
 }
 
