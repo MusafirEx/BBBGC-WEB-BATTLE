@@ -3,39 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <title>BoBoiBoy Galaxy Card Game</title>
-  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js">let myPeer = null;
-let conn = null;
-function initializePeerWithUsername(username) {
-  myPeer = new Peer(username);
-  myPeer.on('open', id => {
-    console.log('My Peer ID:', id);
-  });
-  myPeer.on('connection', connection => {
-    conn = connection;
-    conn.on('data', data => {
-      console.log('Received:', data);
-    });
-  });
-}
-function connectToPeer() {
-  const peerId = document.getElementById('peer-id-input').value;
-  if (!myPeer || !peerId) {
-    alert('Missing PeerJS connection or Peer ID');
-    return;
-  }
-  conn = myPeer.connect(peerId);
-  conn.on('open', () => {
-    console.log('Connected to', peerId);
-    conn.send('Hello from ' + myPeer.id);
-  });
-  conn.on('data', data => {
-    console.log('Received:', data);
-  });
-}
-</script>
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-database-compat.js"></script>
+  <script src="bbb_game.js"></script>
   <style>
     body {
       margin: 0;
@@ -190,137 +162,22 @@ function connectToPeer() {
     <div class="container">
       <div class="left-panel">Player Info / Controls</div>
       <div class="game-board">
-        <div class="slot player-deck"><div class="label">DEK</div></div>
-        <div class="slot player-menang"><div class="label">MENANG</div></div>
-        <div class="slot player-kalah"><div class="label">KALAH</div></div>
-        <div class="slot player-aktif"><div class="label">AKTIF</div></div>
-        <div class="hand-area player-hand"><div class="label">TANGAN</div></div>
-        <div class="slot enemy-deck"><div class="label">DEK</div></div>
-        <div class="slot enemy-menang"><div class="label">MENANG</div></div>
-        <div class="slot enemy-kalah"><div class="label">KALAH</div></div>
-        <div class="slot enemy-aktif"><div class="label">AKTIF</div></div>
-        <div class="hand-area enemy-hand"><div class="label">TANGAN</div></div>
+        <div class="slot player-deck"><div class="label">DEK (Player)</div></div>
+        <div class="slot player-menang"><div class="label">MENANG (Player)</div></div>
+        <div class="slot player-kalah"><div class="label">KALAH (Player)</div></div>
+        <div class="slot player-aktif"><div class="label">AKTIF (Player)</div></div>
+        <div class="hand-area player-hand"><div class="label">TANGAN (Player)</div></div>
+        <div class="slot enemy-deck"><div class="label">DEK (Opponent)</div></div>
+        <div class="slot enemy-menang"><div class="label">MENANG (Opponent)</div></div>
+        <div class="slot enemy-kalah"><div class="label">KALAH (Opponent)</div></div>
+        <div class="slot enemy-aktif"><div class="label">AKTIF (Opponent)</div></div>
+        <div class="hand-area enemy-hand"><div class="label">TANGAN (Opponent)</div></div>
       </div>
     </div>
   </div>
   <div id="online" class="view-container">
     <div class="online-list" id="online-list"></div>
   </div>
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyAfkU0JeMJHxRDLCtUMVvaFGNzYcVi_L7o",
-  authDomain: "bbbgc-e2f01.firebaseapp.com",
-  projectId: "bbbgc-e2f01",
-  storageBucket: "bbbgc-e2f01.firebasestorage.app",
-  messagingSenderId: "446332446643",
-  appId: "1:446332446643:web:caec5871266e73f782cdc6"
-};
-firebase.initializeApp(firebaseConfig);
-function updateAuthUI(user) {
-  const emailInput = document.getElementById('email');
-  const passInput = document.getElementById('password');
-  const loginBtn = document.querySelector("button[onclick='login()']");
-  const registerBtn = document.querySelector("button[onclick='register()']");
-  const googleBtn = document.querySelector("button[onclick='googleLogin()']");
-  const logoutBtn = document.querySelector("button[onclick='logout()']");
-  const authStatus = document.getElementById('auth-status');
-  if (user) {
-    emailInput.style.display = 'none';
-    passInput.style.display = 'none';
-    loginBtn.style.display = 'none';
-    registerBtn.style.display = 'none';
-    googleBtn.style.display = 'none';
-    logoutBtn.style.display = 'inline-block';
-    const username = user.email.split('@')[0];
-    authStatus.textContent = `Logged in as ${username}`;
-  } else {
-    emailInput.style.display = 'inline-block';
-    passInput.style.display = 'inline-block';
-    loginBtn.style.display = 'inline-block';
-    registerBtn.style.display = 'inline-block';
-    googleBtn.style.display = 'inline-block';
-    logoutBtn.style.display = 'none';
-    authStatus.textContent = 'Not logged in';
-  }
-}
-firebase.auth().onAuthStateChanged(user => {
-  updateAuthUI(user);
-});
-function googleLogin() {
-  const provider = new firebase.auth.GoogleAuthProvider();
-  firebase.auth().signInWithPopup(provider)
-    .then(result => {
-      const user = result.user;
-      if (user) {
-        const username = user.email.split('@')[0];
-        initializePeerWithUsername(username);
-        firebase.database().ref('users/' + username).set({ status: 'waiting' });
-        alert('Logged in as ' + username);
-        loadOnlinePlayers();
-        updateAuthUI(user);
-      }
-    })
-    .catch(err => alert(err.message));
-}
-function login() {
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
-  firebase.auth().signInWithEmailAndPassword(email, password)
-    .then(result => {
-      const user = result.user;
-      if (user) {
-        const username = user.email.split('@')[0];
-        initializePeerWithUsername(username);
-        firebase.database().ref('users/' + username).set({ status: 'waiting' });
-        alert('Logged in as ' + username);
-        loadOnlinePlayers();
-        updateAuthUI(user);
-      }
-    })
-    .catch(err => alert(err.message));
-}
-function register() {
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
-  firebase.auth().createUserWithEmailAndPassword(email, password)
-    .catch(err => alert(err.message));
-}
-function logout() {
-  firebase.auth().signOut();
-  updateAuthUI(null);
-}
-function switchTab(tabId) {
-  const tabs = document.querySelectorAll('.view-container');
-  const buttons = document.querySelectorAll('.tab-button');
-  tabs.forEach(tab => tab.classList.remove('active'));
-  buttons.forEach(btn => btn.classList.remove('active'));
-  document.getElementById(tabId).classList.add('active');
-  const activeButton = Array.from(buttons).find(btn => btn.textContent.toLowerCase().includes(tabId));
-  if (activeButton) activeButton.classList.add('active');
-}
-function loadOnlinePlayers() {
-  const list = document.getElementById('online-list');
-  firebase.database().ref('users').on('value', snapshot => {
-    list.innerHTML = '';
-    snapshot.forEach(child => {
-      const user = child.key;
-      const status = child.val().status;
-      if (user !== username) {
-        const div = document.createElement('div');
-        div.className = 'user-entry';
-        div.innerHTML = `
-          <span>${user} (${status})</span>
-          <button onclick="challengePlayer('${user}')">Challenge</button>
-        `;
-        list.appendChild(div);
-      }
-    });
-  });
-}
-function challengePlayer(playerId) {
-  document.getElementById('peer-id-input').value = playerId;
-  connectToPeer();
-}
-</script>
+<script src="bbb_game.js"></script>
 </body>
 </html>
