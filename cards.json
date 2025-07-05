@@ -1,6 +1,0 @@
-
-[
-  { "id": 1, "name": "BoBoiBoy Thunderstorm", "type": "Attack", "image": "cards/card1.png" },
-  { "id": 2, "name": "Yaya Biscuit Boost", "type": "Support", "image": "cards/card2.png" },
-  { "id": 3, "name": "Gopal Gold Shield", "type": "Defense", "image": "cards/card3.png" }
-]
